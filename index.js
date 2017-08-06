@@ -28,6 +28,10 @@ const LED_RED = 2;
 const LED_YELLOW = 3;
 
 class BicolorBargraph {
+  static create (opts) {
+    return new BicolorBargraph(opts);
+  }
+
   static mapBrightness (value) {
     return Board.map(val, 0, 100, 0, 15);
   }
@@ -163,3 +167,5 @@ class BicolorBargraph {
   }
 }
 
+module.exports = BicolorBargraph.create;
+module.exports.BicolorBargraph = BicolorBargraph;
