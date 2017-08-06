@@ -1,0 +1,19 @@
+{
+  "name": "bicolor-bargraph",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "johnny-five": "^0.11.3"
+  },
+  "dependencies": {
+    "lodash.defaults": "^4.2.0",
+    "lodash.isundefined": "^3.0.1"
+  }
+}
