@@ -87,8 +87,9 @@ class BicolorBargraph {
     return this._send(addr, HT16K33_SYSTEM_SETUP, HT16K33_SYSTEM_SETUP_STANDBY);
   }
 
-  brightness (addr, value = 100) {
-    if (isUndefined(addr)) {
+  brightness (addr, value) {
+    if (isUndefined(value)) {
+      value = addr;
       return this.each(function (addr) {
         this.brightness(addr, value);
       });
@@ -97,13 +98,25 @@ class BicolorBargraph {
       BicolorBargraph.mapBrightness(value));
   }
 
-  _led (addr, col, value) {
+  _setBufferValue (addr, col, value) {
     const pos = Math.floor(col / 8);
     const offset = col % 8;
     this.buffer[addr][pos] = !value
       ? this.buffer[addr][pos] & ~(1 << offset)
       : this.buffer[addr][pos] | (1 << offset);
-    return this._writeDisplay(addr);
+    return this;
+  }
+
+  _led (addr, col, value) {
+    if (col >= this.columns) {
+      throw new Error(`column ${col} out of range (max ${this.columns})`);
+    }
+    const cathode = Math.floor((col < 12 ? col : col - 12) / 4);
+    const anode = col >= 12 ? col % 4 + 4 : col % 4;
+    this._setBufferValue(addr, cathode * 16 + anode + 8,
+      value & LED_GREEN ? 1 : 0)
+      ._setBufferValue(addr, cathode * 16 + anode, value & LED_RED ? 1 : 0);
+    return this;
   }
 
   led (addr, col, value) {
@@ -111,17 +124,25 @@ class BicolorBargraph {
       value = col;
       col = addr;
       return this.each(function (addr) {
-        this.led(addr, col, value);
+        this._led(addr, col, value);
       });
     }
-    if (col >= this.columns) {
-      throw new Error(`column ${col} out of range (max ${this.columns})`);
+    return this._led(addr, col, value)
+      ._writeDisplay(addr);
+  }
+
+  leds (addr, cols, values) {
+    if (isUndefined(values)) {
+      values = cols;
+      cols = addr;
+      return this.each(function (addr) {
+        this.leds(addr, cols, values);
+      });
     }
-    const cathode = Math.floor((col < 12 ? col : col - 12) / 4);
-    const anode = col >= 12 ? col % 4 + 4 : col % 4;
-    this._led(addr, cathode * 16 + anode + 8, value & LED_GREEN ? 1 : 0);
-    this._led(addr, cathode * 16 + anode, value & LED_RED ? 1 : 0);
-    return this;
+    cols.forEach((col, i) => {
+      this._led(addr, col, values[i]);
+    });
+    return this._writeDisplay(addr);
   }
 
   _writeDisplay (addr) {
@@ -182,3 +203,7 @@ class BicolorBargraph {
 
 module.exports = BicolorBargraph.create;
 module.exports.BicolorBargraph = BicolorBargraph;
+module.exports.GREEN = LED_GREEN;
+module.exports.RED = LED_RED;
+module.exports.YELLOW = LED_YELLOW;
+module.exports.OFF = LED_OFF;
